@@ -1,0 +1,49 @@
+{
+  "node": {
+    "600e993bf947f3d44098676b2d90c8bb560bfd6902": {
+      "workers": {
+        "app/admin/(dashboard)/properties/page": {
+          "moduleId": 51423,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "bulkChangeStatus",
+      "filename": "src/app/admin/(dashboard)/properties/actions.ts"
+    },
+    "606cadd17613942ae6ac725cb57c21f5f8dd27b19d": {
+      "workers": {
+        "app/admin/(dashboard)/properties/page": {
+          "moduleId": 51423,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "changePropertyStatus",
+      "filename": "src/app/admin/(dashboard)/properties/actions.ts"
+    },
+    "40a3b28094e83ffbac344d6b1d486b1198bb662b15": {
+      "workers": {
+        "app/admin/(dashboard)/properties/page": {
+          "moduleId": 51423,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "duplicateProperty",
+      "filename": "src/app/admin/(dashboard)/properties/actions.ts"
+    },
+    "60723c92624a4d1a60edbf83773cc15223327cb7b4": {
+      "workers": {
+        "app/admin/(dashboard)/properties/page": {
+          "moduleId": 51423,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "toggleFeatured",
+      "filename": "src/app/admin/(dashboard)/properties/actions.ts"
+    }
+  },
+  "edge": {}
+}

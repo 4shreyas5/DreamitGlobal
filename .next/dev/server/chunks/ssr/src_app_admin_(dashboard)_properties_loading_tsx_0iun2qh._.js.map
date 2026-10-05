@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/shreyas/Documents/DreamitGlobal/DreamitGlobal/src/app/admin/(dashboard)/properties/loading.tsx"],"sourcesContent":["export default function AdminPropertiesLoading() {\n  return (\n    <div>\n      <div className=\"h-8 w-40 animate-pulse rounded-xs bg-canvas-alt\" />\n      <div className=\"mt-6 h-64 animate-pulse rounded-md bg-canvas-alt\" />\n    </div>\n  );\n}\n"],"names":["AdminPropertiesLoading","className"],"mappings":";;;;;;AAAe,SAASA;IACtB,qBACE,8OAAC;;0BACC,8OAAC;gBAAIC,WAAU;;;;;;0BACf,8OAAC;gBAAIA,WAAU;;;;;;;;;;;;AAGrB"}}]
+}

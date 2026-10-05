@@ -18,7 +18,7 @@ export interface PropertyRow {
   title: string;
   slug: string;
   cityName: string;
-  localityName: string;
+  countryName: string;
   priceAmount: string;
   priceCurrency: string;
   status: PropertyStatus;
@@ -174,10 +174,10 @@ export function PropertiesTable({ rows }: { rows: PropertyRow[] }) {
                 </div>
               </td>
               <td className="px-2 py-2 text-ink-secondary">
-                {row.localityName}, {row.cityName}
+                {row.cityName}, {row.countryName}
               </td>
               <td className="px-2 py-2 tabular-nums text-ink">
-                {row.priceCurrency} {Number(row.priceAmount).toLocaleString("en-IN")}
+                {row.priceCurrency} {Number(row.priceAmount).toLocaleString("en")}
               </td>
               <td className="px-2 py-2">
                 <select
@@ -202,7 +202,7 @@ export function PropertiesTable({ rows }: { rows: PropertyRow[] }) {
                 </select>
               </td>
               <td className="px-2 py-2 text-ink-secondary">
-                {new Date(row.updatedAt).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}
+                {new Date(row.updatedAt).toLocaleDateString("en", { timeZone: "UTC" })}
               </td>
               <td className="px-2 py-2">
                 <div className="flex items-center justify-end gap-3 text-xs">

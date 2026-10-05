@@ -8,14 +8,12 @@ export const propertyFormSchema = z.object({
 
   // Location
   cityId: z.string().min(1, "City is required"),
-  localityId: z.string().min(1, "Locality is required"),
-  neighbourhoodId: z.string().optional(),
   latitude: z.coerce.number().min(-90).max(90).optional(),
   longitude: z.coerce.number().min(-180).max(180).optional(),
 
   // Pricing
   priceAmount: z.coerce.number().positive("Enter a price"),
-  priceCurrency: z.string().length(3, "Use a 3-letter currency code, e.g. INR"),
+  priceCurrency: z.string().length(3, "Use a 3-letter currency code, e.g. USD"),
   rentPeriod: z.enum(["MONTHLY", "YEARLY"]).optional(),
 
   // Specifications
@@ -77,7 +75,7 @@ export const propertyDraftSchema = propertyFormSchema.partial().extend({
 
 export const propertyStepFields = {
   basic: ["title", "listingType", "categoryId"],
-  location: ["cityId", "localityId", "neighbourhoodId", "latitude", "longitude"],
+  location: ["cityId", "latitude", "longitude"],
   pricing: ["priceAmount", "priceCurrency", "rentPeriod"],
   specifications: [
     "areaValue",

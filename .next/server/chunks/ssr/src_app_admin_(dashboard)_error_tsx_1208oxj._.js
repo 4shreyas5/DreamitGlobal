@@ -1,0 +1,3 @@
+module.exports=[78588,a=>{"use strict";var b=a.i(87924);a.s(["default",0,function({reset:a}){return(0,b.jsxs)("div",{className:"flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center",children:[(0,b.jsx)("h1",{className:"font-display text-xl font-medium text-ink",children:"Something went wrong"}),(0,b.jsx)("p",{className:"max-w-sm text-sm text-ink-secondary",children:"The action didn't complete. Try again, or refresh the page."}),(0,b.jsx)("button",{type:"button",onClick:a,className:"rounded-sm border border-border-strong px-4 py-2 text-sm font-medium text-ink hover:bg-canvas-alt",children:"Try again"})]})}])}];
+
+//# sourceMappingURL=src_app_admin_%28dashboard%29_error_tsx_1208oxj._.js.map

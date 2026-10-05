@@ -6,16 +6,16 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Only cities/localities that actually have listings — a pan-India location
+  // Only countries/cities that actually have listings — a worldwide location
   // taxonomy must not add hundreds of empty pages to the sitemap.
   const listed = { properties: { some: { status: "PUBLISHED" as const } } };
-  const [properties, cities, localities, categories] = await Promise.all([
+  const [properties, cities, countries, categories] = await Promise.all([
     prisma.property.findMany({
       where: { status: { in: ["PUBLISHED", "UNDER_OFFER"] } },
       select: { slug: true, updatedAt: true },
     }),
     prisma.city.findMany({ where: listed, select: { slug: true } }),
-    prisma.locality.findMany({ where: listed, select: { slug: true, city: { select: { slug: true } } } }),
+    prisma.country.findMany({ where: { states: { some: { cities: { some: listed } } } }, select: { code: true } }),
     prisma.category.findMany({ select: { slug: true } }),
   ]);
 
@@ -24,8 +24,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "daily" as const,
   }));
 
-  const localityRoutes = localities.map((locality) => ({
-    url: `${SITE_URL}/${locality.city.slug}/${locality.slug}`,
+  const countryRoutes = countries.map((country) => ({
+    url: `${SITE_URL}/country/${country.code.toLowerCase()}`,
     changeFrequency: "daily" as const,
   }));
 
@@ -48,8 +48,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/rent`, changeFrequency: "hourly" },
     { url: `${SITE_URL}/search`, changeFrequency: "hourly" },
     { url: `${SITE_URL}/locations`, changeFrequency: "daily" },
+    ...countryRoutes,
     ...cityRoutes,
-    ...localityRoutes,
     ...categoryRoutesPerCity,
     ...propertyRoutes,
   ];

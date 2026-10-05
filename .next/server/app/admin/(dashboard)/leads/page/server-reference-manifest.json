@@ -1,0 +1,16 @@
+{
+  "node": {
+    "60a14af28cb86389f1af8f645ba00c641d24a175bf": {
+      "workers": {
+        "app/admin/(dashboard)/leads/page": {
+          "moduleId": 3799,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "updateLeadStatus",
+      "filename": "src/app/admin/(dashboard)/leads/actions.ts"
+    }
+  },
+  "edge": {}
+}

@@ -32,8 +32,7 @@ export default async function AdminPropertiesPage({
     prisma.property.findMany({
       where,
       include: {
-        city: true,
-        locality: true,
+        city: { include: { state: { select: { country: { select: { name: true } } } } } },
         images: { where: { isCover: true }, take: 1 },
       },
       orderBy: [{ updatedAt: "desc" }, { id: "asc" }],
@@ -51,7 +50,7 @@ export default async function AdminPropertiesPage({
     title: property.title,
     slug: property.slug,
     cityName: property.city.name,
-    localityName: property.locality.name,
+    countryName: property.city.state.country.name,
     priceAmount: property.priceAmount.toString(),
     priceCurrency: property.priceCurrency,
     status: property.status,

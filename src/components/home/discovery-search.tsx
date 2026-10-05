@@ -8,30 +8,38 @@ export interface SearchOption {
   name: string;
 }
 
+export interface SearchCity extends SearchOption {
+  countryId: string;
+}
+
 /**
- * Establishes the discovery model (location, buy/rent, category, price,
+ * Establishes the discovery model (country → city, buy/rent, category, price,
  * bedrooms) without faking results here — submitting takes the visitor to
  * the dedicated /buy or /rent journey, which is where the real, filterable
  * result set lives, scoped to that transaction type.
  */
 export function DiscoverySearch({
+  countries,
   cities,
   categories,
-  defaultCityId,
 }: {
-  cities: SearchOption[];
+  countries: SearchOption[];
+  cities: SearchCity[];
   categories: SearchOption[];
-  defaultCityId?: string;
 }) {
   const router = useRouter();
-  const [cityId, setCityId] = useState(cities.some((c) => c.id === defaultCityId) ? defaultCityId! : (cities[0]?.id ?? ""));
+  const [countryId, setCountryId] = useState("");
+  const [cityId, setCityId] = useState("");
   const [listingType, setListingType] = useState<"SALE" | "RENT">("SALE");
   const [categoryId, setCategoryId] = useState("");
   const [bedrooms, setBedrooms] = useState("");
 
+  const visibleCities = countryId ? cities.filter((c) => c.countryId === countryId) : cities;
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams();
+    if (countryId) params.set("country", countryId);
     if (cityId) params.set("city", cityId);
     if (categoryId) params.set("category", categoryId);
     if (bedrooms) params.set("bedrooms", bedrooms);
@@ -63,6 +71,26 @@ export function DiscoverySearch({
         ))}
       </div>
 
+      <label className="sr-only" htmlFor="search-country">
+        Country
+      </label>
+      <select
+        id="search-country"
+        value={countryId}
+        onChange={(e) => {
+          setCountryId(e.target.value);
+          setCityId("");
+        }}
+        className="flex-1 rounded-sm border border-border px-3 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
+      >
+        <option value="">Any country</option>
+        {countries.map((country) => (
+          <option key={country.id} value={country.id}>
+            {country.name}
+          </option>
+        ))}
+      </select>
+
       <label className="sr-only" htmlFor="search-city">
         City
       </label>
@@ -72,7 +100,8 @@ export function DiscoverySearch({
         onChange={(e) => setCityId(e.target.value)}
         className="flex-1 rounded-sm border border-border px-3 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
       >
-        {cities.map((city) => (
+        <option value="">Any city</option>
+        {visibleCities.map((city) => (
           <option key={city.id} value={city.id}>
             {city.name}
           </option>

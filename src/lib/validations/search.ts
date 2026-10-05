@@ -1,9 +1,6 @@
 export interface SearchParams {
   country?: string;
-  state?: string;
   city?: string;
-  locality?: string;
-  neighbourhood?: string;
   type?: string;
   category?: string;
   minPrice?: string;
@@ -41,10 +38,7 @@ function toPositiveNumber(value: string | undefined) {
 export function parseSearchParams(params: SearchParams) {
   return {
     countryId: id(params.country),
-    stateId: id(params.state),
     cityId: id(params.city),
-    localityId: id(params.locality),
-    neighbourhoodId: id(params.neighbourhood),
     listingType: params.type && LISTING_TYPES.has(params.type) ? (params.type as "SALE" | "RENT") : undefined,
     categoryId: params.category || undefined,
     minPrice: toPositiveNumber(params.minPrice),

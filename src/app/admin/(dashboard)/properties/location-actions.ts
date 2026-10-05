@@ -11,35 +11,15 @@ export interface LocationOption {
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 
 /**
- * Dependent lookups for the property wizard's Location step. Each level is
- * fetched only once its parent is chosen, so the browser never receives
- * every city / locality in the country.
+ * Dependent lookup for the property wizard's Location step: cities are
+ * fetched only once a country is chosen, so the browser never receives
+ * every city in the world.
  */
-export async function getCitiesForState(stateId: string): Promise<LocationOption[]> {
+export async function getCitiesForCountry(countryId: string): Promise<LocationOption[]> {
   await requireAdminUser();
-  if (!ID.test(stateId)) return [];
+  if (!ID.test(countryId)) return [];
   return prisma.city.findMany({
-    where: { stateId },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-  });
-}
-
-export async function getLocalitiesForCity(cityId: string): Promise<LocationOption[]> {
-  await requireAdminUser();
-  if (!ID.test(cityId)) return [];
-  return prisma.locality.findMany({
-    where: { cityId },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-  });
-}
-
-export async function getNeighbourhoodsForLocality(localityId: string): Promise<LocationOption[]> {
-  await requireAdminUser();
-  if (!ID.test(localityId)) return [];
-  return prisma.neighbourhood.findMany({
-    where: { localityId },
+    where: { state: { countryId } },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });

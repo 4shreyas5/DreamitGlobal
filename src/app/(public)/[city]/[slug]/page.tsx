@@ -13,15 +13,10 @@ const resolvePage = cache(async (citySlug: string, slug: string) => {
   const city = await prisma.city.findUnique({ where: { slug: citySlug } });
   if (!city) return null;
 
-  const locality = await prisma.locality.findUnique({
-    where: { cityId_slug: { cityId: city.id, slug } },
-  });
-  if (locality) return { kind: "locality" as const, city, locality };
-
   const category = await prisma.category.findUnique({ where: { slug } });
-  if (category) return { kind: "category" as const, city, category };
+  if (!category) return null;
 
-  return null;
+  return { city, category };
 });
 
 export async function generateMetadata({
@@ -33,20 +28,16 @@ export async function generateMetadata({
   const resolved = await resolvePage(city, slug);
   if (!resolved) return {};
 
-  const name = resolved.kind === "locality" ? resolved.locality.name : resolved.category.name;
-  const title =
-    resolved.kind === "locality"
-      ? `Properties in ${name}, ${resolved.city.name}`
-      : `${name} in ${resolved.city.name}`;
+  const name = resolved.category.name;
 
   return {
-    title,
-    description: `Curated ${resolved.kind === "locality" ? "properties in" : name.toLowerCase() + " in"} ${resolved.city.name}.`,
+    title: `${name} in ${resolved.city.name}`,
+    description: `Curated ${name.toLowerCase()} in ${resolved.city.name}.`,
     alternates: { canonical: `/${resolved.city.slug}/${slug}` },
   };
 }
 
-export default async function LocalityOrCategoryPage({
+export default async function CityCategoryPage({
   params,
 }: {
   params: Promise<{ city: string; slug: string }>;
@@ -55,12 +46,12 @@ export default async function LocalityOrCategoryPage({
   const resolved = await resolvePage(citySlug, slug);
   if (!resolved) notFound();
 
-  const { properties, count } =
-    resolved.kind === "locality"
-      ? await searchProperties({ cityId: resolved.city.id, localityId: resolved.locality.id })
-      : await searchProperties({ cityId: resolved.city.id, categoryId: resolved.category.id });
+  const { properties, count } = await searchProperties({
+    cityId: resolved.city.id,
+    categoryId: resolved.category.id,
+  });
 
-  const name = resolved.kind === "locality" ? resolved.locality.name : resolved.category.name;
+  const name = resolved.category.name;
 
   return (
     <div className="mx-auto max-w-(--breakpoint-xl) px-4 py-16 sm:px-6 lg:px-10">
@@ -70,7 +61,7 @@ export default async function LocalityOrCategoryPage({
         </Link>
       </p>
       <h1 className="font-display mt-1 text-3xl font-medium text-ink">
-        {resolved.kind === "locality" ? name : `${name} in ${resolved.city.name}`}
+        {name} in {resolved.city.name}
       </h1>
       <p className="mt-2 text-ink-secondary">{count} curated homes</p>
 

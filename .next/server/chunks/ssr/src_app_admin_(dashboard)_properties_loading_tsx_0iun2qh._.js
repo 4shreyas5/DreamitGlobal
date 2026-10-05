@@ -1,0 +1,3 @@
+module.exports=[79105,a=>{"use strict";var b=a.i(7997);a.s(["default",0,function(){return(0,b.jsxs)("div",{children:[(0,b.jsx)("div",{className:"h-8 w-40 animate-pulse rounded-xs bg-canvas-alt"}),(0,b.jsx)("div",{className:"mt-6 h-64 animate-pulse rounded-md bg-canvas-alt"})]})}])},74623,function(a){a.n(a.i(79105))}];
+
+//# sourceMappingURL=src_app_admin_%28dashboard%29_properties_loading_tsx_0iun2qh._.js.map

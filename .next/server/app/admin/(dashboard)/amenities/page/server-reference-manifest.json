@@ -1,0 +1,27 @@
+{
+  "node": {
+    "4053b2c5c359be64b1ea05fe382f99d451975145b4": {
+      "workers": {
+        "app/admin/(dashboard)/amenities/page": {
+          "moduleId": 2968,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "deleteAmenity",
+      "filename": "src/app/admin/(dashboard)/amenities/actions.ts"
+    },
+    "4094c0fedbb6d6c48810a623ddcca062656acbf055": {
+      "workers": {
+        "app/admin/(dashboard)/amenities/page": {
+          "moduleId": 2968,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "createAmenity",
+      "filename": "src/app/admin/(dashboard)/amenities/actions.ts"
+    }
+  },
+  "edge": {}
+}

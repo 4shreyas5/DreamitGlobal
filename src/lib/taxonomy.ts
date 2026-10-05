@@ -9,16 +9,29 @@ export interface ListedCity {
   name: string;
   slug: string;
   imageUrl: string | null;
-  stateName: string;
+  countryId: string;
+  countryName: string;
   count: number;
+}
+
+export interface ListedCountry {
+  id: string;
+  name: string;
+  code: string;
+  count: number;
+  cities: ListedCity[];
 }
 
 /**
  * Cities that currently have at least one PUBLISHED property, busiest first.
  * This — not "every city in the database" — is what public navigation, the
  * homepage search, the filter sheet and the sitemap are built from, so a
- * pan-India location taxonomy doesn't turn into 170 empty pages.
+ * worldwide location taxonomy doesn't turn into hundreds of empty pages.
  * Cached (shared across requests) and invalidated via the "locations" tag.
+ *
+ * The user-facing hierarchy is Country → City. The schema's State/Province
+ * and Locality tables stay in place but are never surfaced; the country is
+ * reached through the city's (internal) state relation.
  */
 export const getCitiesWithListings = unstable_cache(
   async (): Promise<ListedCity[]> => {
@@ -31,7 +44,13 @@ export const getCitiesWithListings = unstable_cache(
 
     const cities = await prisma.city.findMany({
       where: { id: { in: groups.map((g) => g.cityId) } },
-      select: { id: true, name: true, slug: true, imageUrl: true, state: { select: { name: true } } },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        imageUrl: true,
+        state: { select: { country: { select: { id: true, name: true } } } },
+      },
     });
     const counts = new Map(groups.map((g) => [g.cityId, g._count._all]));
 
@@ -41,7 +60,8 @@ export const getCitiesWithListings = unstable_cache(
         name: c.name,
         slug: c.slug,
         imageUrl: c.imageUrl,
-        stateName: c.state.name,
+        countryId: c.state.country.id,
+        countryName: c.state.country.name,
         count: counts.get(c.id) ?? 0,
       }))
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
@@ -50,53 +70,58 @@ export const getCitiesWithListings = unstable_cache(
   { revalidate: LOCATIONS_REVALIDATE_SECONDS, tags: [LOCATIONS_CACHE_TAG] },
 );
 
-/** Featured city first (admin-curated), else the busiest city, else any city. */
-export async function getPrimaryCity(listed: ListedCity[]) {
-  const featured = await prisma.featuredCity.findFirst({
-    orderBy: { position: "asc" },
-    include: { city: { select: { id: true, name: true, slug: true, imageUrl: true } } },
-  });
-  if (featured) return featured.city;
-  if (listed[0]) return listed[0];
-  return prisma.city.findFirst({
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, slug: true, imageUrl: true },
-  });
-}
+/** Countries that have published listings (busiest first), each with its listed cities. */
+export const getCountriesWithListings = unstable_cache(
+  async (): Promise<ListedCountry[]> => {
+    const cities = await getCitiesWithListings();
+    if (cities.length === 0) return [];
 
-/** Localities that have published listings, busiest first — falls back to alphabetical if none do yet. */
-export const getExploreLocations = unstable_cache(
-  async (limit = 6) => {
-    const groups = await prisma.property.groupBy({
-      by: ["localityId"],
-      where: { status: "PUBLISHED" },
-      _count: { _all: true },
-      orderBy: { _count: { localityId: "desc" } },
-      take: limit,
+    const countries = await prisma.country.findMany({
+      where: { id: { in: [...new Set(cities.map((c) => c.countryId))] } },
+      select: { id: true, name: true, code: true },
     });
 
-    const include = { city: { select: { name: true, slug: true } } };
-    let localities = groups.length
-      ? await prisma.locality.findMany({ where: { id: { in: groups.map((g) => g.localityId) } }, include })
-      : await prisma.locality.findMany({ take: limit, orderBy: { name: "asc" }, include });
-
-    if (groups.length) {
-      const order = new Map(groups.map((g, i) => [g.localityId, i]));
-      localities = localities.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
-    }
-
-    return localities.map((locality) => ({
-      id: locality.id,
-      name: locality.name,
-      slug: locality.slug,
-      citySlug: locality.city.slug,
-      cityName: locality.city.name,
-      imageUrl: locality.imageUrl,
-    }));
+    return countries
+      .map((country) => {
+        const countryCities = cities.filter((c) => c.countryId === country.id);
+        return {
+          ...country,
+          count: countryCities.reduce((sum, c) => sum + c.count, 0),
+          cities: countryCities,
+        };
+      })
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
   },
-  ["explore-locations"],
+  ["countries-with-listings"],
   { revalidate: LOCATIONS_REVALIDATE_SECONDS, tags: [LOCATIONS_CACHE_TAG] },
 );
+
+/** Listed cities, busiest first — the homepage "Explore locations" cards. */
+export async function getExploreCities(limit = 6) {
+  const cities = await getCitiesWithListings();
+  if (cities.length > 0) return cities.slice(0, limit);
+
+  const fallback = await prisma.city.findMany({
+    take: limit,
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      imageUrl: true,
+      state: { select: { country: { select: { id: true, name: true } } } },
+    },
+  });
+  return fallback.map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    imageUrl: c.imageUrl,
+    countryId: c.state.country.id,
+    countryName: c.state.country.name,
+    count: 0,
+  }));
+}
 
 export async function getExploreCategories(limit = 6) {
   const categories = await prisma.category.findMany({
@@ -112,13 +137,34 @@ export async function getExploreCategories(limit = 6) {
   }));
 }
 
-/** Every city (unfiltered) — for admin-style pickers and fallbacks only, never for public navigation. */
-export async function getAllCities() {
-  const cities = await prisma.city.findMany({ orderBy: { name: "asc" } });
-  return cities.map((c) => ({ id: c.id, name: c.name, slug: c.slug, imageUrl: c.imageUrl }));
-}
-
 export async function getAllCategories() {
   const categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
   return categories.map((c) => ({ id: c.id, name: c.name, slug: c.slug }));
+}
+
+/**
+ * Global mode exposes only Country → City, but the schema still requires every
+ * City to hang off a StateProvince and every Property off a Locality. Rather
+ * than change the schema, each country gets one internal "default" state
+ * (named after the country) and each city one internal default locality
+ * (named after the city). Both are created on demand and never shown.
+ */
+export async function ensureDefaultState(countryId: string) {
+  const country = await prisma.country.findUniqueOrThrow({ where: { id: countryId }, select: { name: true } });
+  return prisma.stateProvince.upsert({
+    where: { countryId_name: { countryId, name: country.name } },
+    update: {},
+    create: { countryId, name: country.name },
+    select: { id: true },
+  });
+}
+
+export async function ensureDefaultLocality(cityId: string) {
+  const city = await prisma.city.findUniqueOrThrow({ where: { id: cityId }, select: { name: true } });
+  return prisma.locality.upsert({
+    where: { cityId_slug: { cityId, slug: "default" } },
+    update: {},
+    create: { cityId, name: city.name, slug: "default" },
+    select: { id: true },
+  });
 }

@@ -5,9 +5,7 @@ import { useRef, useState, useTransition } from "react";
 import { savePropertyDraft, publishProperty } from "@/app/admin/(dashboard)/properties/actions";
 import { slugify, type PropertyFormValues } from "@/lib/validations/property";
 import {
-  getCitiesForState,
-  getLocalitiesForCity,
-  getNeighbourhoodsForLocality,
+  getCitiesForCountry,
   type LocationOption,
 } from "@/app/admin/(dashboard)/properties/location-actions";
 import { ImageManager, type PropertyImageRow } from "./image-manager";
@@ -26,15 +24,13 @@ const STEPS = [
 
 export interface WizardTaxonomy {
   categories: { id: string; name: string }[];
-  states: { id: string; name: string; countryCode: string }[];
+  countries: { id: string; name: string; code: string }[];
   amenities: { id: string; name: string }[];
 }
 
 export interface WizardLocationChain {
-  stateId: string;
+  countryId: string;
   cities: LocationOption[];
-  localities: LocationOption[];
-  neighbourhoods: LocationOption[];
 }
 
 const input =
@@ -69,13 +65,13 @@ export function PropertyWizard({
   }
 
   function saveAndGo(nextStep: number) {
-    // A brand-new property can't be persisted yet without category/city/
-    // locality (required relations) — Basic Info (step 0) only collects
-    // category, and city/locality live on the very next step. Rather than
+    // A brand-new property can't be persisted yet without category/city
+    // (required relations) — Basic Info (step 0) only collects
+    // category, and the city lives on the very next step. Rather than
     // surface a "fill Location first" error on every first save, just
     // advance locally until enough is known to actually create the row;
     // nothing is lost since `values` stays in React state.
-    if (!propertyId && !(values.categoryId && values.cityId && values.localityId)) {
+    if (!propertyId && !(values.categoryId && values.cityId)) {
       setDraftErrors([]);
       setStep(nextStep);
       return;
@@ -114,53 +110,37 @@ export function PropertyWizard({
     });
   }
 
-  // Dependent location dropdowns: State → City → Locality → Neighbourhood.
-  // Each list is fetched only when its parent is chosen.
-  const [stateId, setStateId] = useState(initialLocation?.stateId ?? "");
+  // Dependent location dropdowns: Country → City. Cities are fetched only
+  // when a country is chosen.
+  const [countryId, setCountryId] = useState(initialLocation?.countryId ?? "");
   const [cities, setCities] = useState<LocationOption[]>(initialLocation?.cities ?? []);
-  const [localities, setLocalities] = useState<LocationOption[]>(initialLocation?.localities ?? []);
-  const [neighbourhoods, setNeighbourhoods] = useState<LocationOption[]>(initialLocation?.neighbourhoods ?? []);
-  const [loadingLevel, setLoadingLevel] = useState<"city" | "locality" | "neighbourhood" | null>(null);
+  const [loadingCities, setLoadingCities] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const requestId = useRef(0);
 
-  async function loadLevel<T>(level: "city" | "locality" | "neighbourhood", load: () => Promise<T>, apply: (result: T) => void) {
-    const id = ++requestId.current;
-    setLoadingLevel(level);
+  async function chooseCountry(next: string) {
+    setCountryId(next);
+    setValues((prev) => ({ ...prev, cityId: undefined }));
+    setCities([]);
+    setSaved(false);
     setLocationError(null);
+    if (!next) return;
+
+    const id = ++requestId.current;
+    setLoadingCities(true);
     try {
-      const result = await load();
-      if (id === requestId.current) apply(result);
+      const result = await getCitiesForCountry(next);
+      if (id === requestId.current) setCities(result);
     } catch {
       if (id === requestId.current) setLocationError("Couldn't load locations. Check your connection and try again.");
     } finally {
-      if (id === requestId.current) setLoadingLevel(null);
+      if (id === requestId.current) setLoadingCities(false);
     }
   }
 
-  function chooseState(next: string) {
-    setStateId(next);
-    setValues((prev) => ({ ...prev, cityId: undefined, localityId: undefined, neighbourhoodId: undefined }));
-    setCities([]);
-    setLocalities([]);
-    setNeighbourhoods([]);
-    setSaved(false);
-    if (next) void loadLevel("city", () => getCitiesForState(next), setCities);
-  }
-
   function chooseCity(next: string) {
-    setValues((prev) => ({ ...prev, cityId: next || undefined, localityId: undefined, neighbourhoodId: undefined }));
-    setLocalities([]);
-    setNeighbourhoods([]);
+    setValues((prev) => ({ ...prev, cityId: next || undefined }));
     setSaved(false);
-    if (next) void loadLevel("locality", () => getLocalitiesForCity(next), setLocalities);
-  }
-
-  function chooseLocality(next: string) {
-    setValues((prev) => ({ ...prev, localityId: next || undefined, neighbourhoodId: undefined }));
-    setNeighbourhoods([]);
-    setSaved(false);
-    if (next) void loadLevel("neighbourhood", () => getNeighbourhoodsForLocality(next), setNeighbourhoods);
   }
 
   return (
@@ -227,17 +207,17 @@ export function PropertyWizard({
         {step === 1 && (
           <section className="space-y-4">
             <div>
-              <label className={label} htmlFor="wizard-state">State / Union Territory</label>
+              <label className={label} htmlFor="wizard-country">Country</label>
               <select
-                id="wizard-state"
+                id="wizard-country"
                 className={input}
-                value={stateId}
-                onChange={(e) => chooseState(e.target.value)}
+                value={countryId}
+                onChange={(e) => void chooseCountry(e.target.value)}
               >
-                <option value="">Select a state or UT</option>
-                {taxonomy.states.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
+                <option value="">Select a country</option>
+                {taxonomy.countries.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
                   </option>
                 ))}
               </select>
@@ -248,11 +228,11 @@ export function PropertyWizard({
                 id="wizard-city"
                 className={input}
                 value={values.cityId ?? ""}
-                disabled={!stateId || loadingLevel === "city"}
+                disabled={!countryId || loadingCities}
                 onChange={(e) => chooseCity(e.target.value)}
               >
                 <option value="">
-                  {!stateId ? "Select a state first" : loadingLevel === "city" ? "Loading cities…" : "Select a city"}
+                  {!countryId ? "Select a country first" : loadingCities ? "Loading cities…" : "Select a city"}
                 </option>
                 {cities.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -260,48 +240,9 @@ export function PropertyWizard({
                   </option>
                 ))}
               </select>
-              {stateId && loadingLevel !== "city" && cities.length === 0 && (
-                <p className="mt-1 text-xs text-ink-secondary">No cities for this state yet — add one under Locations.</p>
+              {countryId && !loadingCities && cities.length === 0 && (
+                <p className="mt-1 text-xs text-ink-secondary">No cities for this country yet — add one under Locations.</p>
               )}
-            </div>
-            <div>
-              <label className={label} htmlFor="wizard-locality">Locality</label>
-              <select
-                id="wizard-locality"
-                className={input}
-                value={values.localityId ?? ""}
-                disabled={!values.cityId || loadingLevel === "locality"}
-                onChange={(e) => chooseLocality(e.target.value)}
-              >
-                <option value="">
-                  {!values.cityId ? "Select a city first" : loadingLevel === "locality" ? "Loading localities…" : "Select a locality"}
-                </option>
-                {localities.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.name}
-                  </option>
-                ))}
-              </select>
-              {values.cityId && loadingLevel !== "locality" && localities.length === 0 && (
-                <p className="mt-1 text-xs text-ink-secondary">No localities for this city yet — add one under Locations.</p>
-              )}
-            </div>
-            <div>
-              <label className={label} htmlFor="wizard-neighbourhood">Neighbourhood (optional)</label>
-              <select
-                id="wizard-neighbourhood"
-                className={input}
-                value={values.neighbourhoodId ?? ""}
-                disabled={!values.localityId || loadingLevel === "neighbourhood"}
-                onChange={(e) => set("neighbourhoodId", e.target.value)}
-              >
-                <option value="">None</option>
-                {neighbourhoods.map((n) => (
-                  <option key={n.id} value={n.id}>
-                    {n.name}
-                  </option>
-                ))}
-              </select>
             </div>
             {locationError && (
               <p role="alert" className="rounded-sm border border-error/30 bg-error/5 p-3 text-sm text-error">
@@ -349,7 +290,7 @@ export function PropertyWizard({
                 <label className={label}>Currency (ISO 4217)</label>
                 <input
                   className={input}
-                  value={values.priceCurrency ?? "INR"}
+                  value={values.priceCurrency ?? "USD"}
                   onChange={(e) => set("priceCurrency", e.target.value.toUpperCase())}
                   maxLength={3}
                 />
@@ -390,7 +331,7 @@ export function PropertyWizard({
                   value={values.areaUnit ?? "SQFT"}
                   onChange={(e) => set("areaUnit", e.target.value as PropertyFormValues["areaUnit"])}
                 >
-                  {["SQFT", "SQM", "ACRE", "HECTARE", "MARLA", "KANAL"].map((u) => (
+                  {["SQFT", "SQM", "ACRE", "HECTARE"].map((u) => (
                     <option key={u} value={u}>
                       {u}
                     </option>

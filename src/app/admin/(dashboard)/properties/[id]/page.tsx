@@ -21,15 +21,13 @@ export default async function EditPropertyPage({
 
   if (!property) notFound();
 
-  const initialLocation = await getWizardLocationChain(property.cityId, property.localityId);
+  const initialLocation = await getWizardLocationChain(property.cityId);
 
   const initialValues: Partial<PropertyFormValues> = {
     title: property.title,
     listingType: property.listingType,
     categoryId: property.categoryId,
     cityId: property.cityId,
-    localityId: property.localityId,
-    neighbourhoodId: property.neighbourhoodId ?? undefined,
     latitude: property.latitude ?? undefined,
     longitude: property.longitude ?? undefined,
     priceAmount: Number(property.priceAmount),

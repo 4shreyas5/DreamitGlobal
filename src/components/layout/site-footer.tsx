@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { DreamITLogo } from "@/components/brand/dreamit-logo";
 
-export function SiteFooter({ cities }: { cities: { id: string; name: string; slug: string }[] }) {
-  const cityLinks = cities.slice(0, 8).map((c) => ({ href: `/${c.slug}`, label: c.name }));
+export function SiteFooter({ countries }: { countries: { id: string; name: string; code: string }[] }) {
+  const countryLinks = countries.slice(0, 8).map((c) => ({ href: `/country/${c.code.toLowerCase()}`, label: c.name }));
 
   return (
     <footer className="mt-auto border-t border-border bg-canvas-alt">
@@ -17,19 +17,19 @@ export function SiteFooter({ cities }: { cities: { id: string; name: string; slu
         </div>
 
         <div>
-          <p className="font-medium text-ink">Cities</p>
+          <p className="font-medium text-ink">Countries</p>
           <ul className="mt-3 space-y-2">
-            {cityLinks.length === 0 && (
+            {countryLinks.length === 0 && (
               <li>
                 <Link href="/locations" className="text-ink-secondary hover:text-ink">
                   All locations
                 </Link>
               </li>
             )}
-            {cityLinks.map((city) => (
-              <li key={city.href}>
-                <Link href={city.href} className="text-ink-secondary hover:text-ink">
-                  {city.label}
+            {countryLinks.map((country) => (
+              <li key={country.href}>
+                <Link href={country.href} className="text-ink-secondary hover:text-ink">
+                  {country.label}
                 </Link>
               </li>
             ))}

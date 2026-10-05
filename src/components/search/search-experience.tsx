@@ -90,12 +90,16 @@ export function SearchExperience({
     // removable filter chip — only surface it as a chip on generic /search.
     const type = searchParams.get("type");
     if (!lockedType && type) chips.push({ key: "type", label: type === "SALE" ? "Buy" : "Rent" });
+    const country = searchParams.get("country");
+    if (country) {
+      const found = taxonomy.countries.find((c) => c.id === country);
+      chips.push({ key: "country", label: found?.name ?? "Country" });
+    }
     const city = searchParams.get("city");
     if (city) {
       const found = taxonomy.cities.find((c) => c.id === city);
       chips.push({ key: "city", label: found?.name ?? "City" });
     }
-    if (searchParams.get("locality")) chips.push({ key: "locality", label: "Locality" });
     const category = searchParams.get("category");
     if (category) {
       const found = taxonomy.categories.find((c) => c.id === category);
@@ -112,13 +116,9 @@ export function SearchExperience({
       });
     }
     return chips;
-  }, [searchParams, taxonomy.categories, taxonomy.cities, lockedType]);
+  }, [searchParams, taxonomy.categories, taxonomy.cities, taxonomy.countries, lockedType]);
 
   function clearChip(key: string) {
-    if (key === "city") {
-      updateParams({ city: null, locality: null, neighbourhood: null });
-      return;
-    }
     if (key === "price") {
       updateParams({ minPrice: null, maxPrice: null });
       return;

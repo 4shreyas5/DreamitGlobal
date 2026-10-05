@@ -1,0 +1,27 @@
+{
+  "node": {
+    "407f8441c531c98d5a0586c8967381c6f518e5aa13": {
+      "workers": {
+        "app/admin/(dashboard)/users/page": {
+          "moduleId": 47008,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "removeAdminUser",
+      "filename": "src/app/admin/(dashboard)/users/actions.ts"
+    },
+    "40a0ca2228ccadf4006889b9ff13ce53f9144489f5": {
+      "workers": {
+        "app/admin/(dashboard)/users/page": {
+          "moduleId": 47008,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "addAdminUser",
+      "filename": "src/app/admin/(dashboard)/users/actions.ts"
+    }
+  },
+  "edge": {}
+}

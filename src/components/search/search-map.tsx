@@ -178,7 +178,7 @@ export function SearchMap({
                 {formatPrice(previewProperty.priceAmount, previewProperty.priceCurrency)}
               </p>
               <p className="truncate text-xs text-ink-secondary">
-                {previewProperty.localityName}, {previewProperty.cityName}
+                {previewProperty.cityName}, {previewProperty.countryName}
               </p>
             </div>
           </Link>

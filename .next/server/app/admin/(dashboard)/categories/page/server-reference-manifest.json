@@ -1,0 +1,27 @@
+{
+  "node": {
+    "4012dfa5f3d6c0ee8115d0447c0c487173eca4579e": {
+      "workers": {
+        "app/admin/(dashboard)/categories/page": {
+          "moduleId": 47935,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "deleteCategory",
+      "filename": "src/app/admin/(dashboard)/categories/actions.ts"
+    },
+    "402720593c58abaadcf5ef9a88cdbb054becf1398f": {
+      "workers": {
+        "app/admin/(dashboard)/categories/page": {
+          "moduleId": 47935,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "createCategory",
+      "filename": "src/app/admin/(dashboard)/categories/actions.ts"
+    }
+  },
+  "edge": {}
+}

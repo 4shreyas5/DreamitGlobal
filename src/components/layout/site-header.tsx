@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { LinkButton } from "@/components/ui/button";
 import { DreamITLogo } from "@/components/brand/dreamit-logo";
-import { CityMenu, type NavCity } from "./city-menu";
+import { CountryMenu, type NavCountry } from "./country-menu";
 
 const primaryLinks = [
   { href: "/buy", label: "Buy" },
@@ -16,13 +16,13 @@ const primaryLinks = [
 ];
 
 /**
- * Single-row nav: logo, city selector, primary links, contact action.
- * No mega-menu. Mobile collapses links into a slide-in sheet; the city
+ * Single-row nav: logo, country selector, primary links, contact action.
+ * No mega-menu. Mobile collapses links into a slide-in sheet; the country
  * selector and contact action stay visible in the bar at every breakpoint.
  * Buy/Rent are the two primary discovery journeys, so they lead the nav and
  * get an explicit active-state indicator — not a generic filter link.
  */
-export function SiteHeader({ cities }: { cities: NavCity[] }) {
+export function SiteHeader({ countries }: { countries: NavCountry[] }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
 
@@ -48,7 +48,7 @@ export function SiteHeader({ cities }: { cities: NavCity[] }) {
           <DreamITLogo />
         </Link>
 
-        <CityMenu cities={cities} />
+        <CountryMenu countries={countries} />
 
         <nav className="ml-auto hidden items-center gap-6 lg:flex" aria-label="Primary">
           {primaryLinks.map((link) => {

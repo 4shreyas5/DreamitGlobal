@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/shreyas/Documents/DreamitGlobal/DreamitGlobal/src/app/admin/(dashboard)/error.tsx"],"sourcesContent":["\"use client\";\n\nexport default function AdminError({\n  reset,\n}: {\n  error: Error & { digest?: string };\n  reset: () => void;\n}) {\n  return (\n    <div className=\"flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center\">\n      <h1 className=\"font-display text-xl font-medium text-ink\">Something went wrong</h1>\n      <p className=\"max-w-sm text-sm text-ink-secondary\">\n        The action didn&apos;t complete. Try again, or refresh the page.\n      </p>\n      <button\n        type=\"button\"\n        onClick={reset}\n        className=\"rounded-sm border border-border-strong px-4 py-2 text-sm font-medium text-ink hover:bg-canvas-alt\"\n      >\n        Try again\n      </button>\n    </div>\n  );\n}\n"],"names":["AdminError","reset","className","type","onClick"],"mappings":";;;;;AAAA;;AAEe,SAASA,WAAW,EACjCC,KAAK,EAIN;IACC,qBACE,8OAAC;QAAIC,WAAU;;0BACb,8OAAC;gBAAGA,WAAU;0BAA4C;;;;;;0BAC1D,8OAAC;gBAAEA,WAAU;0BAAsC;;;;;;0BAGnD,8OAAC;gBACCC,MAAK;gBACLC,SAASH;gBACTC,WAAU;0BACX;;;;;;;;;;;;AAKP"}}]
+}

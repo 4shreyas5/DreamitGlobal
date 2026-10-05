@@ -17,7 +17,7 @@ export interface PropertyCardData {
   bedrooms: number | null;
   bathrooms: number | null;
   cityName: string;
-  localityName: string;
+  countryName: string;
   status: string;
   coverImage: { url: string; altText: string } | null;
 }
@@ -35,8 +35,7 @@ const cardSelect = {
   bedrooms: true,
   bathrooms: true,
   status: true,
-  city: { select: { name: true } },
-  locality: { select: { name: true } },
+  city: { select: { name: true, state: { select: { country: { select: { name: true } } } } } },
   images: {
     where: { isCover: true },
     take: 1,
@@ -60,7 +59,7 @@ function toCardData(property: RawCardProperty): PropertyCardData {
     bedrooms: property.bedrooms,
     bathrooms: property.bathrooms,
     cityName: property.city.name,
-    localityName: property.locality.name,
+    countryName: property.city.state.country.name,
     status: property.status,
     coverImage: property.images[0] && isRenderableImageUrl(property.images[0].url) ? property.images[0] : null,
   };
@@ -88,11 +87,11 @@ export async function getRecentProperties(limit = 8, excludeIds: string[] = []) 
 
 export async function getSimilarProperties(
   propertyId: string,
-  localityId: string,
+  cityId: string,
   limit = 6,
 ): Promise<PropertyCardData[]> {
   const properties = await prisma.property.findMany({
-    where: { status: "PUBLISHED", localityId, id: { not: propertyId } },
+    where: { status: "PUBLISHED", cityId, id: { not: propertyId } },
     select: cardSelect,
     orderBy: { publishedAt: "desc" },
     take: limit,
@@ -110,9 +109,7 @@ export const getPropertyBySlug = cache(async (slug: string) => {
     where: { slug },
     include: {
       category: true,
-      city: true,
-      locality: true,
-      neighbourhood: true,
+      city: { include: { state: { select: { country: { select: { name: true, code: true } } } } } },
       images: { orderBy: { position: "asc" } },
       amenities: { include: { amenity: true } },
     },
@@ -123,10 +120,7 @@ export const DEFAULT_SEARCH_PAGE_SIZE = 24;
 
 export interface PropertySearchFilters {
   countryId?: string;
-  stateId?: string;
   cityId?: string;
-  localityId?: string;
-  neighbourhoodId?: string;
   listingType?: ListingType;
   categoryId?: string;
   minPrice?: number;
@@ -143,14 +137,10 @@ export interface PropertySearchFilters {
 export async function searchProperties(filters: PropertySearchFilters) {
   const where: Prisma.PropertyWhereInput = {
     status: "PUBLISHED",
-    // Country / state are reached through the city's relations, so a property
-    // is searchable at every level of the hierarchy without denormalising.
+    // Country is reached through the city's relations, so a property is
+    // searchable by country and city without denormalising.
     ...(filters.countryId && { city: { state: { countryId: filters.countryId } } }),
-    ...(filters.stateId && !filters.countryId && { city: { stateId: filters.stateId } }),
-    ...(filters.stateId && filters.countryId && { city: { stateId: filters.stateId, state: { countryId: filters.countryId } } }),
     ...(filters.cityId && { cityId: filters.cityId }),
-    ...(filters.localityId && { localityId: filters.localityId }),
-    ...(filters.neighbourhoodId && { neighbourhoodId: filters.neighbourhoodId }),
     ...(filters.listingType && { listingType: filters.listingType }),
     ...(filters.categoryId && { categoryId: filters.categoryId }),
     ...(filters.bedrooms !== undefined && { bedrooms: { gte: filters.bedrooms } }),

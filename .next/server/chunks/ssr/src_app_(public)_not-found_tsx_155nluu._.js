@@ -1,0 +1,3 @@
+module.exports=[27964,a=>{"use strict";var b=a.i(7997),c=a.i(95936);a.s(["default",0,function(){return(0,b.jsxs)("div",{className:"flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 text-center",children:[(0,b.jsx)("h1",{className:"font-display text-2xl font-medium text-ink",children:"We couldn't find that page"}),(0,b.jsx)("p",{className:"max-w-sm text-ink-secondary",children:"It may have moved, or the home you're looking for is no longer listed."}),(0,b.jsx)(c.default,{href:"/search",className:"rounded-sm bg-accent px-5 py-2.5 text-sm font-medium text-canvas hover:bg-accent-hover",children:"Browse properties"})]})}])},10445,function(a){a.n(a.i(27964))}];
+
+//# sourceMappingURL=src_app_%28public%29_not-found_tsx_155nluu._.js.map

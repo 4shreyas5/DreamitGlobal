@@ -7,28 +7,25 @@ import { PropertyGrid } from "@/components/property/property-grid";
 import { getFeaturedProperties, getRecentProperties } from "@/lib/properties";
 import {
   getAllCategories,
-  getAllCities,
   getCitiesWithListings,
+  getCountriesWithListings,
   getExploreCategories,
-  getExploreLocations,
-  getPrimaryCity,
+  getExploreCities,
 } from "@/lib/taxonomy";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [featured, listedCities, categories, exploreLocations, exploreCategories] = await Promise.all([
+  const [featured, listedCities, listedCountries, categories, exploreCities, exploreCategories] = await Promise.all([
     getFeaturedProperties(6),
     getCitiesWithListings(),
+    getCountriesWithListings(),
     getAllCategories(),
-    getExploreLocations(4),
+    getExploreCities(4),
     getExploreCategories(4),
   ]);
 
   const recent = await getRecentProperties(6, featured.map((p) => p.id));
-  const primaryCity = await getPrimaryCity(listedCities);
-  // Search offers the cities that actually have listings; if none do yet, every city.
-  const searchCities = listedCities.length > 0 ? listedCities : await getAllCities();
 
   return (
     <div>
@@ -40,7 +37,7 @@ export default async function HomePage() {
               Your perfect home is our goal.
             </h1>
             <p className="mt-4 max-w-md text-canvas/80 [text-shadow:0_1px_12px_rgba(28,27,25,0.5)]">
-              Considered homes in {primaryCity?.name ?? "your city"} — seen,
+              Considered homes across the world — seen,
               shortlisted, and photographed by our own team.
             </p>
 
@@ -67,9 +64,9 @@ export default async function HomePage() {
 
             <div className="mt-8">
               <DiscoverySearch
-                cities={searchCities}
+                countries={listedCountries.map((c) => ({ id: c.id, name: c.name }))}
+                cities={listedCities.map((c) => ({ id: c.id, name: c.name, countryId: c.countryId }))}
                 categories={categories}
-                defaultCityId={primaryCity?.id}
               />
             </div>
           </div>
@@ -95,18 +92,18 @@ export default async function HomePage() {
       )}
 
       {/* Explore locations */}
-      {exploreLocations.length > 0 && (
+      {exploreCities.length > 0 && (
         <section className="bg-canvas-alt py-24">
           <div className="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-10">
             <h2 className="font-display text-3xl font-medium text-ink">Explore locations</h2>
             <div className="mt-10 flex gap-4 overflow-x-auto pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible">
-              {exploreLocations.map((locality) => (
+              {exploreCities.map((city) => (
                 <EditorialImageCard
-                  key={locality.id}
-                  href={`/${locality.citySlug}/${locality.slug}`}
-                  label={locality.name}
-                  imageUrl={locality.imageUrl}
-                  imageAlt={`${locality.name}, ${locality.cityName}`}
+                  key={city.id}
+                  href={`/${city.slug}`}
+                  label={city.name}
+                  imageUrl={city.imageUrl}
+                  imageAlt={`${city.name}, ${city.countryName}`}
                   className="w-48 lg:w-auto"
                 />
               ))}
@@ -123,7 +120,7 @@ export default async function HomePage() {
             {exploreCategories.map((category) => (
               <EditorialImageCard
                 key={category.id}
-                href={`/${primaryCity?.slug ?? ""}/${category.slug}`}
+                href={`/search?category=${category.id}`}
                 label={category.name}
                 imageUrl={category.imageUrl}
                 imageAlt={category.name}
@@ -179,7 +176,7 @@ export default async function HomePage() {
       <section className="border-t border-border py-20">
         <div className="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-10">
           <p className="font-display max-w-2xl text-xl text-ink">
-            We don&apos;t list every property in {primaryCity?.name ?? "the city"} — only
+            We don&apos;t list every property on the market — only
             the ones our own team has visited, photographed, and would
             recommend to a friend.
           </p>

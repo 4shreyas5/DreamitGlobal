@@ -54,7 +54,7 @@ export function LeadsTable({ rows }: { rows: LeadRow[] }) {
             <td className="px-3 py-2 text-ink-secondary">{lead.actionType}</td>
             <td className="px-3 py-2 text-ink-secondary">{lead.source}</td>
             <td className="px-3 py-2 text-ink-secondary">
-              {new Date(lead.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
+              {new Date(lead.createdAt).toLocaleString("en", { timeZone: "UTC" })}
             </td>
             <td className="px-3 py-2">
               <select

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdminUser } from "@/lib/admin-auth";
 import { propertyDraftSchema, type PropertyFormValues } from "@/lib/validations/property";
-import { LOCATIONS_CACHE_TAG } from "@/lib/taxonomy";
+import { ensureDefaultLocality, LOCATIONS_CACHE_TAG } from "@/lib/taxonomy";
 import type { PropertyStatus } from "@prisma/client";
 
 /** Creates the property on first save, updates it on every step after — always as a Draft. */
@@ -30,14 +30,12 @@ export async function savePropertyDraft(
     ...(values.categoryId !== undefined && {
       category: { connect: { id: values.categoryId } },
     }),
-    ...(values.cityId !== undefined && { city: { connect: { id: values.cityId } } }),
-    ...(values.localityId !== undefined && {
-      locality: { connect: { id: values.localityId } },
-    }),
-    ...(values.neighbourhoodId !== undefined && {
-      neighbourhood: values.neighbourhoodId
-        ? { connect: { id: values.neighbourhoodId } }
-        : { disconnect: true },
+    // Global mode is Country → City; the schema's required Locality is the
+    // city's internal default (see ensureDefaultLocality) and is never user-facing.
+    ...(values.cityId !== undefined && {
+      city: { connect: { id: values.cityId } },
+      locality: { connect: { id: (await ensureDefaultLocality(values.cityId)).id } },
+      neighbourhood: { disconnect: true },
     }),
     ...(values.latitude !== undefined && { latitude: values.latitude }),
     ...(values.longitude !== undefined && { longitude: values.longitude }),
@@ -77,16 +75,17 @@ export async function savePropertyDraft(
   let id = propertyId;
 
   if (!id) {
-    // `category`/`city`/`locality` are required, non-nullable relations on
-    // Property — a first save can't create a row without them, regardless
-    // of which wizard step collected them last. Catch that here with a
-    // clear message instead of letting Prisma throw a raw validation error.
-    if (!values.categoryId || !values.cityId || !values.localityId) {
+    // `category`/`city` are required, non-nullable relations on Property — a
+    // first save can't create a row without them, regardless of which wizard
+    // step collected them last. Catch that here with a clear message instead
+    // of letting Prisma throw a raw validation error.
+    if (!values.categoryId || !values.cityId) {
       return {
         ok: false as const,
-        errors: ["Select a category, city, and locality before saving this draft for the first time."],
+        errors: ["Select a category, country, and city before saving this draft for the first time."],
       };
     }
+    const locality = await ensureDefaultLocality(values.cityId);
 
     // A brand-new draft needs the minimum fields a relation requires up front.
     const created = await prisma.property.create({
@@ -95,14 +94,14 @@ export async function savePropertyDraft(
         slug: values.slug || `untitled-${Date.now()}`,
         listingType: values.listingType ?? "SALE",
         priceAmount: values.priceAmount ?? 0,
-        priceCurrency: values.priceCurrency ?? "INR",
+        priceCurrency: values.priceCurrency ?? "USD",
         areaValue: values.areaValue ?? 0,
         areaUnit: values.areaUnit ?? "SQFT",
         description: values.description ?? "",
         status: "DRAFT",
         category: { connect: { id: values.categoryId } },
         city: { connect: { id: values.cityId } },
-        locality: { connect: { id: values.localityId } },
+        locality: { connect: { id: locality.id } },
       },
     });
     id = created.id;
